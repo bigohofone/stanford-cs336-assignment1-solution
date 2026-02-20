@@ -8,7 +8,7 @@ from .scaled_dot_product_attention import ScaledDotProductAttention
 
 
 class MultiHeadSelfAttention(nn.Module):
-    def __init__(self, d_model: int, num_heads: int, device=None, dtype=None):
+    def __init__(self, d_model: int, num_heads: int, device=None, dtype=None, **kwargs):
         super().__init__()
         if d_model % num_heads != 0:
             raise ValueError("d_model must be divisible by num_heads")
@@ -41,7 +41,7 @@ class MultiHeadSelfAttention(nn.Module):
         
 
 class MultiHeadSelfAttentionWithRoPE(nn.Module):
-    def __init__(self, d_model: int, num_heads: int, max_seq_len: int, theta: float, device=None, dtype=None):
+    def __init__(self, d_model: int, num_heads: int, max_seq_len: int, theta: float, device=None, dtype=None, **kwargs):
         super().__init__()
         if d_model % num_heads != 0:
             raise ValueError("d_model must be divisible by num_heads")

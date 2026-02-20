@@ -1,0 +1,10 @@
+paths:
+  save_ckpt_dir: "checkpoints/remove_rope"
+  load_ckpt_path: null
+
+wandb:
+  project: "cs336-a1-ts"
+  name: "remove_rope"
+
+model:
+  remove_rope: true

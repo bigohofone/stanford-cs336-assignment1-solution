@@ -5,7 +5,7 @@ import math
 from .linear import Linear
 
 class SiLU(nn.Module):
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__()
         self.sigmoid = nn.Sigmoid()
     
@@ -14,7 +14,7 @@ class SiLU(nn.Module):
 
 
 class SwiGLU(nn.Module):
-    def __init__(self, d_model: int, d_ff: int, device=None, dtype=None):
+    def __init__(self, d_model: int, d_ff: int, device=None, dtype=None, **kwargs):
         super().__init__()
         self.silu = SiLU()
         self.w1 = Linear(d_model, d_ff, device, dtype)

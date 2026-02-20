@@ -1,6 +1,0 @@
-{
-    "vocab_size": 10000,
-    "special_tokens": [
-        "<|endoftext|>"
-    ]
-}

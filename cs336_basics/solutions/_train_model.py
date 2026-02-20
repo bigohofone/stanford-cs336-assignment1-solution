@@ -7,7 +7,7 @@ import numpy as np
 import deepspeed
 import wandb
 import torch
-
+import yaml
 from tqdm import tqdm
 
 from cs336_basics.solutions.transformer_lm import TransformerLM
@@ -44,71 +44,71 @@ def seed_everything(seed: int = 42):
 parser = argparse.ArgumentParser()
 parser = deepspeed.add_config_arguments(parser)
 parser.add_argument("--local_rank", type=int, default=-1, help="Local rank passed by deepspeed launcher")
-parser.add_argument("--model_config_path", type=str, required=True)
-parser.add_argument("--ds_config_path", type=str, required=True)
-parser.add_argument("--dataset_dir", type=str, required=True)
-parser.add_argument("--checkpoint_dir", type=str, default="./checkpoints", help="Dir to save checkpoints")
-parser.add_argument("--save_interval", type=int, default=2000, help="Interval (in steps) to save checkpoints")
-parser.add_argument("--resume_from", type=str, default=None, help="Path to a specific checkpoint to resume from")
-# Training
-parser.add_argument("--lr", type=float, default=3e-4)
-parser.add_argument("--min_lr", type=float, default=3e-5)
-parser.add_argument("--context_length", type=int, default=256)
-parser.add_argument("--total_iters", type=int, default=10000)
-parser.add_argument("--warmup_iters", type=int, default=1000)
-parser.add_argument("--z", type=float, default=0.0)
-parser.add_argument("--max_grad_norm", type=float, default=1.0)
-# Wandb
-parser.add_argument("--wandb_project", type=str, default="cs336-a1-ts")
-parser.add_argument("--wandb_name", type=str, default="run-test")
+parser.add_argument("--base_config_path", type=str, help="Path to the YAML configuration file")
+parser.add_argument('--update_config_path', type=str, nargs='*', help="Additional config updates in the form of key=value pairs")
+parser.add_argument('--test', action='store_true', help="Whether to run in test mode with fewer iterations")
 args = parser.parse_args()
 
 
+with open(args.base_config_path, 'r') as f:
+    config = yaml.safe_load(f)
+
+for update_path in args.update_config_path or []:
+    with open(update_path, 'r') as f:
+        update = yaml.safe_load(f)
+        for key, value in update.items():
+            config[key] = value
+            
+if args.test:
+    config['training']['total_iters'] = 10
+    config['training']['warmup_iters'] = 5
+    config['training']['save_interval'] = 5
+    config['paths']['save_ckpt_dir'] = "./out/test_ckpts"
+    config['wandb']['name'] = "test"
+
+
+torch.cuda.set_device(args.local_rank)
 deepspeed.init_distributed()
 rank = deepspeed.comm.get_rank()
 seed_everything(42 + rank)
 
 
 if rank == 0:
-    wandb.login()
-    wandb.init(project=args.wandb_project, name=args.wandb_name,
+    wandb.login(key=os.getenv("WANDB_API_KEY"))
+    wandb.init(project=config['wandb']['project'], 
+               name=f"run-{config['wandb']['name']}-{wandb.util.generate_id()}",
                config=vars(args), resume="allow")
 
-full_dataset = load_dataset(args.dataset_dir)
+full_dataset = load_dataset(config['paths']['dataset_dir'])
 
-with open(args.model_config_path, 'r') as f:
-    model = TransformerLM(**json.load(f))
-
-optimizer = AdamW(params=model.parameters(), lr=args.lr)
-
-with open(args.ds_config_path, 'r') as f:
-    ds_config = json.load(f)
+model = TransformerLM(**config['model'])
+optimizer = AdamW(params=model.parameters(), lr=config['training']['lr'])
 
 model_engine, optimizer, _, _ = deepspeed.initialize(
     args=args,
     model=model,
     optimizer=optimizer,
-    config=ds_config
+    config=config['deepspeed']
 )
 
-loss_fn = CrossEntropyLoss(z=args.z)
+loss_fn = CrossEntropyLoss(z=config['training']['z'])
 
 start_step = 0
-if args.resume_from:
-    _, client_state = model_engine.load_checkpoint(args.resume_from)
+if config['paths']['load_ckpt_path'] is not None:
+    _, client_state = model_engine.load_checkpoint(config['paths']['load_ckpt_path'])
     start_step = client_state.get('step', 0) + 1
     if rank == 0:
         print(f"Resuming training from step {start_step}")
 
-pbar = tqdm(range(start_step, args.total_iters), disable=(rank != 0), desc="Training")
+pbar = tqdm(range(start_step, config['training']['total_iters']), disable=(rank != 0), desc="Training")
 
 for step in pbar:
     current_lr = get_lr_cosine_schedule(
         it=step,
-        max_learning_rate=args.lr,
-        min_learning_rate=args.min_lr,
-        warmup_iters=args.warmup_iters,
-        cosine_cycle_iters=args.total_iters
+        max_learning_rate=config['training']['lr'],
+        min_learning_rate=config['training']['min_lr'],
+        warmup_iters=config['training']['warmup_iters'],
+        cosine_cycle_iters=config['training']['total_iters']
     )
 
     for param_group in optimizer.param_groups:
@@ -116,8 +116,8 @@ for step in pbar:
 
     x_batch, y_batch = get_batch(
         dataset=full_dataset,
-        batch_size=ds_config['train_micro_batch_size_per_gpu'],
-        context_length=args.context_length,
+        batch_size=config['deepspeed']['train_micro_batch_size_per_gpu'],
+        context_length=config['training']['max_seq_len'],
         device=str(model_engine.device)
     )
 
@@ -128,7 +128,7 @@ for step in pbar:
 
     clip_grad_norm_(
         parameters=model_engine.parameters(),
-        max_l2_norm=args.max_grad_norm
+        max_l2_norm=config['training']['max_grad_norm']
     )
 
     model_engine.step()
@@ -141,14 +141,14 @@ for step in pbar:
         })
         pbar.set_postfix({"loss": f"{loss.item():.4f}", "lr": f"{current_lr:.2e}"})
 
-    if step > 0 and step % args.save_interval == 0:
+    if step > 0 and step % config['training']['save_interval'] == 0:
         client_state = {'step': step}
-        model_engine.save_checkpoint(args.checkpoint_dir, tag=f"step_{step}", client_state=client_state)
+        model_engine.save_checkpoint(config['paths']['save_ckpt_dir'], tag=f"step_{step}", client_state=client_state)
         if rank == 0:
             pbar.write(f"[Step {step}] Checkpoint saved.")
 
-client_state = {'step': args.total_iters}
-model_engine.save_checkpoint(args.checkpoint_dir, tag="final", client_state=client_state)
+client_state = {'step': config['training']['total_iters']}
+model_engine.save_checkpoint(config['paths']['save_ckpt_dir'], tag="final", client_state=client_state)
 
 if rank == 0:
     print("Training finished.")

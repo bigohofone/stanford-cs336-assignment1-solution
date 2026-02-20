@@ -25,14 +25,21 @@ class TrasformerBlock(nn.Module):
     ):
         super().__init__()
         attn_type = MultiHeadSelfAttentionWithRoPE if not remove_rope else MultiHeadSelfAttention
-        self.attn = attn_type(d_model, num_heads, max_seq_len, theta, device=device, dtype=dtype)
+        self.attn = attn_type(
+            d_model=d_model, num_heads=num_heads,
+            max_seq_len=max_seq_len, theta=theta,
+            device=device, dtype=dtype
+        )
         
         norm_type = RMSNorm if not remove_rmsnorm else nn.Identity
         self.ln1 = norm_type(d_model, device=device, dtype=dtype) 
         self.ln2 = norm_type(d_model, device=device, dtype=dtype) 
         
         ffn_type = SiLU if ffn_type=='silu' else SwiGLU
-        self.ffn = ffn_type(d_model, d_ff, device=device, dtype=dtype)
+        self.ffn = ffn_type(
+            d_model=d_model, d_ff=d_ff, 
+            device=device, dtype=dtype
+        )
         
         self.use_post_norm = use_post_norm
         

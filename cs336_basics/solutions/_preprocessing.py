@@ -18,9 +18,10 @@ def data_generator(file_path: str, start_byte: int, end_byte: int) -> Iterator[s
             yield line
 
 def worker_fn(worker_id, start_byte, end_byte, args, progress_queue):
-    with open(args.tokenizer_config_path, 'r', encoding='utf-8') as f:
-        tokenizer_cfg = json.load(f)
-    tokenizer = Tokenizer.from_files(args.vocab_path, args.merges_path, **tokenizer_cfg)
+    with open(args.config_path, 'r') as f:
+        import yaml
+        config = yaml.safe_load(f)
+    tokenizer = Tokenizer.from_files(args.vocab_path, args.merges_path, **config['tokenizer'])
     
     token_buffer = []
     with open(args.input_path, 'r', encoding='utf-8', errors='ignore') as f:
@@ -41,7 +42,7 @@ def worker_fn(worker_id, start_byte, end_byte, args, progress_queue):
     progress_queue.put((worker_id, None, np.array(token_buffer, dtype=np.uint32)))
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--tokenizer_config_path', type=str, required=True)
+parser.add_argument('--config_path', type=str, required=True)
 parser.add_argument('--vocab_path', type=str, required=True)
 parser.add_argument('--merges_path', type=str, required=True)
 parser.add_argument('--input_path', type=str, required=True)
