@@ -1,0 +1,17 @@
+[
+    {
+        "run_name": "default__lr_0.0005__bsz_128",
+        "train_iters": 10000,
+        "valid_loss": 1.44647822265625
+    },
+    {
+        "run_name": "default__lr_0.000707__bsz_256",
+        "train_iters": 5000,
+        "valid_loss": 1.44949443359375
+    },
+    {
+        "run_name": "default__lr_0.000354__bsz_64",
+        "train_iters": 20000,
+        "valid_loss": 1.443705859375
+    }
+]

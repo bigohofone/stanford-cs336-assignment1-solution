@@ -1,0 +1,12 @@
+batch_size: 128
+lr: 0.001
+min_lr: 0.0
+total_iters: 10000
+warmup_iters: 
+save_interval: 2000
+max_grad_norm: 1.0
+max_seq_len: 256
+z: 0.0
+target_loss: 
+scheduler: cosine
+save_ckpt: true

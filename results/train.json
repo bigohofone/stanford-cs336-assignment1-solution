@@ -1,0 +1,26 @@
+[
+    {
+        "model_name": "default",
+        "learning_rate": 0.000354,
+        "batch_size": 64,
+        "total_iters": 4999,
+        "final_loss": 1.44508,
+        "run_name": "default__lr_0.000354__bsz_64"
+    },
+    {
+        "model_name": "default",
+        "learning_rate": 0.0005,
+        "batch_size": 128,
+        "total_iters": 9999,
+        "final_loss": 1.44949,
+        "run_name": "default__lr_0.0005__bsz_128"
+    },
+    {
+        "model_name": "default",
+        "learning_rate": 0.000707,
+        "batch_size": 256,
+        "total_iters": 19999,
+        "final_loss": 1.44702,
+        "run_name": "default__lr_0.000707__bsz_256"
+    }
+]

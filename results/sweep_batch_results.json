@@ -1,0 +1,50 @@
+[
+    {
+        "model_name": "default",
+        "learning_rate": 0.000177,
+        "batch_size": 16,
+        "total_iters": 10819,
+        "final_loss": 1.6994531690640722,
+        "wandb_run_name": "default__lr_0.000177__bsz_16"
+    },
+    {
+        "model_name": "default",
+        "learning_rate": 0.00025,
+        "batch_size": 32,
+        "total_iters": 6238,
+        "final_loss": 1.6972422530462417,
+        "wandb_run_name": "default__lr_0.00025__bsz_32"
+    },
+    {
+        "model_name": "default",
+        "learning_rate": 0.000354,
+        "batch_size": 64,
+        "total_iters": 3458,
+        "final_loss": 1.699350967083928,
+        "wandb_run_name": "default__lr_0.000354__bsz_64"
+    },
+    {
+        "model_name": "default",
+        "learning_rate": 0.0005,
+        "batch_size": 128,
+        "total_iters": 1933,
+        "final_loss": 1.699741590568452,
+        "wandb_run_name": "default__lr_0.0005__bsz_128"
+    },
+    {
+        "model_name": "default",
+        "learning_rate": 0.000707,
+        "batch_size": 256,
+        "total_iters": 1130,
+        "final_loss": 1.697848622575211,
+        "wandb_run_name": "default__lr_0.000707__bsz_256"
+    },
+    {
+        "model_name": "default",
+        "learning_rate": 0.001,
+        "batch_size": 512,
+        "total_iters": 692,
+        "final_loss": 1.6982948853327375,
+        "wandb_run_name": "default__lr_0.001__bsz_512"
+    }
+]

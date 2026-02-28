@@ -1,0 +1,22 @@
+defaults:
+  - model: default
+  - training: default
+  - tokenizer: default
+  - deepspeed: stage2
+  - _self_
+
+run_name: ${model.name}__lr_${training.lr}__bsz_${training.batch_size}
+
+paths:
+  root_dir: ${hydra:runtime.cwd}
+  ckpt_dir: ${paths.root_dir}/checkpoints/${run_name}
+  ckpt_id: 
+  train_dataset_dir: ${paths.root_dir}/out/ts_train
+  valid_dataset_dir: ${paths.root_dir}/out/ts_valid
+  vocab_path: ${paths.train_dataset_dir}/tokenizer/vocab.pkl
+  merges_path: ${paths.train_dataset_dir}/tokenizer/merges.pkl
+  result_path: ${paths.root_dir}/results/train.json
+
+validation:
+  batch_size: 2048
+  total_iters: 625

@@ -25,9 +25,12 @@ class TransformerLM(nn.Module):
         remove_rmsnorm: bool = False,
         use_post_norm: bool = False,
         remove_rope: bool = False,
-        ffn_type: Literal["silu", "swiglu"] | None = None
+        ffn_type: Literal["silu", "swiglu"] | None = None,
+        **kwargs
     ):
         super().__init__()
+        self.use_post_norm = use_post_norm
+        
         self.context_length = context_length
         self.token_embeddings = Embedding(vocab_size, d_model, device=device, dtype=dtype)
         self.layers = nn.ModuleList([
@@ -52,6 +55,9 @@ class TransformerLM(nn.Module):
         x = self.token_embeddings(x)
         for layer in self.layers:
             x = layer(x)
-        out = self.lm_head(self.ln_final(x))
+        
+        if not self.use_post_norm:
+            x = self.ln_final(x)
+        out = self.lm_head(x)
         
         return out

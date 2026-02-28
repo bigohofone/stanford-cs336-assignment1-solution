@@ -22,3 +22,19 @@ def get_lr_cosine_schedule(
         lr = min_learning_rate
         
     return lr
+
+
+def get_lr_warmup_schedule(
+    it: int,
+    max_learning_rate: float,
+    min_learning_rate: float,
+    warmup_iters: int,
+    total_iters: int,
+) -> float:
+    
+    if it <= warmup_iters:
+        lr = max_learning_rate * it / warmup_iters
+    else:
+        lr = max_learning_rate
+        
+    return lr

@@ -6,7 +6,7 @@ from jaxtyping import Bool, Float, Int
 
 from .multihead_self_attention import MultiHeadSelfAttentionWithRoPE, MultiHeadSelfAttention
 from .rmsnorm import RMSNorm
-from .positionwise_feedforward import SwiGLU, SiLU
+from .positionwise_feedforward import SwiGLU, FFNSiLU
 
 class TrasformerBlock(nn.Module):
     def __init__(
@@ -34,7 +34,7 @@ class TrasformerBlock(nn.Module):
         self.ln1 = RMSNorm(d_model, device=device, dtype=dtype) if not remove_rmsnorm else nn.Identity()
         self.ln2 = RMSNorm(d_model, device=device, dtype=dtype) if not remove_rmsnorm else nn.Identity()
         
-        ffn_type = SiLU if ffn_type=='silu' else SwiGLU
+        ffn_type = FFNSiLU if ffn_type=='silu' else SwiGLU
         self.ffn = ffn_type(
             d_model=d_model, d_ff=d_ff, 
             device=device, dtype=dtype
