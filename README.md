@@ -5,10 +5,14 @@
 
 ## Results
 
+<p align="center">
+
 | Split | TinyStories |
 | :--- | ---: |
 | **Train Loss** | 1.445 |
 | **Valid Loss** | 1.444 |
+
+</p>
 
 > Train loss was measured as the EMA of the final steps with $\beta=0.9$, while validation loss was calculated as the overall average.
 
